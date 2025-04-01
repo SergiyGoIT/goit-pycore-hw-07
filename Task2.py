@@ -25,9 +25,15 @@ class Record:
         self.name = Name(name)
         self.phones = []
         self.birthday = None
-
     def add_phone(self, phone):
         self.phones.append(Phone(phone))
+
+    def change_phone(self, old_phone, new_phone):
+        for phone in self.phones:
+            if phone.value == old_phone:
+                phone.value = new_phone
+                return True
+        return False
 
     def add_birthday(self, birthday):
         self.birthday = Birthday(birthday)
@@ -40,7 +46,6 @@ class Record:
                 next_birthday = next_birthday.replace(year=today.year + 1)
             return (next_birthday - today).days
         return None
-
 class AddressBook:
     def __init__(self):
         self.records = []
@@ -84,6 +89,36 @@ def add_contact(args, book: AddressBook):
     if phone:
         record.add_phone(phone)
     return message
+
+@input_error
+def change_contact(args, book: AddressBook):
+    name, old_phone, new_phone, *_ = args
+    record = book.find(name)
+    if record is None:
+        return "Contact not found."
+    if record.change_phone(old_phone, new_phone):
+        return "Phone number updated."
+    return "Old phone number not found."
+
+@input_error
+def show_phone(args, book: AddressBook):
+    name, *_ = args
+    record = book.find(name)
+    if record is None:
+        return "Contact not found."
+    phones = ", ".join(phone.value for phone in record.phones)
+    return f"{record.name.value}'s phone numbers: {phones}"
+
+@input_error
+def show_all(book: AddressBook):
+    if not book.records:
+        return "No contacts found."
+    result = "All contacts:\n"
+    for record in book.records:
+        phones = ", ".join(phone.value for phone in record.phones)
+        birthday = record.birthday.value.strftime('%d.%m.%Y') if record.birthday else "Not set"
+        result += f"Name: {record.name.value}, Phones: {phones}, Birthday: {birthday}\n"
+    return result.strip()
 
 @input_error
 def add_birthday(args, book: AddressBook):
